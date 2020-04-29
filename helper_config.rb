@@ -1,3 +1,11 @@
+PRICE = :price
+REGULAR_PRICE = :regular_price
+KEY = :key
+NAME = :name
+STOCK = :stock
+PROMO_NAME = :promo_name
+SKU = :sku
+
 def find_ctx
   path = File.dirname(__FILE__) + '/ctx.rb'
   #=> ["class Ctx < Helper_Config\n", "class Ctx1 < Helper_Config\n"]
