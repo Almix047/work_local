@@ -20,6 +20,11 @@ def titles_ctx
   titles.push('SELECT ALL')
 end
 
+def vars_init(name)
+  @ctx = Object.const_get(name).new
+  @doc = @ctx.doc
+end
+
 def make_a_choice
   puts 'Enter the number of the selected line:'
   # +1 to start the array element index from 1 but not from 0
@@ -28,10 +33,13 @@ def make_a_choice
   choice = gets.to_i
   if (1..max_num).include?(choice)
     if choice == max_num
-      puts "Selected 'ALL'. Now in development."
+      puts 'Use the following structure to iterate over all products:'
+      puts "find_ctx.each do |ctx|\n"\
+           "  vars_init(ctx)\n"\
+           "  Insert your command(s) or call method(s)\n"
+      puts "end"
     else
-      @ctx = Object.const_get(find_ctx[choice - 1]).new
-      @doc = @ctx.doc
+      vars_init(find_ctx[choice - 1])
       puts 'Instance variable initialized'
     end
   else
