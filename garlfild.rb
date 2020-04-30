@@ -17,9 +17,9 @@ class CustomParser_13829 < Scripting::CustomParser
         (0..multi_products.length - 1).each do |num|
           p[NAME] = name_multiproduct(num)
           p[SKU] = multi_products[num].xpath('./@data-art').text
-          p[PRICE] = prepare_json['OFFERS'][num]['ITEM_PRICES'].first['PRICE'] if promo?(num)
+          p[PRICE] = prepare_json['OFFERS'][num]['ITEM_PRICES'].first['PRICE']
           p[PROMO_NAME] = 'Акция' if promo?(num)
-          p[REGULAR_PRICE] = prepare_json['OFFERS'][num]['ITEM_PRICES'].first['BASE_PRICE']
+          p[REGULAR_PRICE] = prepare_json['OFFERS'][num]['ITEM_PRICES'].first['BASE_PRICE'] if promo?(num)
           p[STOCK] = product_availability(num)
           p[KEY] = multi_products[num].xpath('./@data-onevalue').text + p[SKU]
           ctx.add_product(p)
@@ -27,9 +27,9 @@ class CustomParser_13829 < Scripting::CustomParser
       else
         p[NAME] = @doc.xpath('//h1[@class="bx-title"]').text.tr(',', '')
         p[SKU] = @doc.xpath('//span[@class="item_art_number"]').text
-        p[PRICE] = prepare_json['PRODUCT']['ITEM_PRICES'].first['PRICE'] if promo?
+        p[PRICE] = prepare_json['PRODUCT']['ITEM_PRICES'].first['PRICE']
         p[PROMO_NAME] = 'Акция' if promo?
-        p[REGULAR_PRICE] = prepare_json['PRODUCT']['ITEM_PRICES'].first['BASE_PRICE']
+        p[REGULAR_PRICE] = prepare_json['PRODUCT']['ITEM_PRICES'].first['BASE_PRICE'] if promo?
         p[STOCK] = product_availability
         # To fix
         p[KEY] = @doc.xpath('//p[@class="field js_class_valid"]/input[@name="good_id"]/@value').text + p[SKU]
@@ -54,7 +54,7 @@ class CustomParser_13829 < Scripting::CustomParser
     JSON.parse(data)
   end
 
-  def promo?(num=nil)
+  def promo?(num = nil)
     promo = if multi_products.length.positive?
               prepare_json['OFFERS'][num]
             else
@@ -63,7 +63,7 @@ class CustomParser_13829 < Scripting::CustomParser
     promo['ITEM_PRICES'].first['DISCOUNT'].to_f.positive?
   end
 
-  def product_availability(num=nil)
+  def product_availability(num = nil)
     stock = if multi_products.length.positive?
               multi_products[num].xpath('./@data-availstatus').text
             else
@@ -80,7 +80,7 @@ class CustomParser_13829 < Scripting::CustomParser
   end
 
   def name_multiproduct(num)
-    name = @doc.xpath('//h1[@class="bx-title"]').text
+    name = prepare_json['OFFERS'][num]['NAME']
     weight = multi_products[num].xpath('./@title').text
     "#{name} #{weight}"
   end
