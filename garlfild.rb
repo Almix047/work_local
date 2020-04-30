@@ -13,15 +13,15 @@ class CustomParser_13829 < Scripting::CustomParser
       initialize_instance_variables(ctx)
       # делаем копию экстрактора. если работать с результатом напрямую, при каждой новой итерации исходник будет переписываться
       p = ctx.base_product.dup
-      if multi_product.length.positive?
-        (0..multi_product.length - 1).each do |num|
+      if multi_products.length.positive?
+        (0..multi_products.length - 1).each do |num|
           p[NAME] = name_multiproduct(num)
-          p[SKU] = multi_product[num].xpath('./@data-art').text
+          p[SKU] = multi_products[num].xpath('./@data-art').text
           p[PRICE] = prepare_json['OFFERS'][num]['ITEM_PRICES'].first['PRICE'] if promo?(num)
           p[PROMO_NAME] = 'Акция' if promo?(num)
           p[REGULAR_PRICE] = prepare_json['OFFERS'][num]['ITEM_PRICES'].first['BASE_PRICE']
           p[STOCK] = product_availability(num)
-          p[KEY] = multi_product[num].xpath('./@data-onevalue').text + p[SKU]
+          p[KEY] = multi_products[num].xpath('./@data-onevalue').text + p[SKU]
           ctx.add_product(p)
         end
       else
@@ -44,7 +44,7 @@ class CustomParser_13829 < Scripting::CustomParser
     @doc = ctx.doc
   end
 
-  def multi_product
+  def multi_products
     @doc.xpath("//div[@class='product-item-detail-info-section']//li")
   end
 
@@ -55,7 +55,7 @@ class CustomParser_13829 < Scripting::CustomParser
   end
 
   def promo?(num=nil)
-    promo = if multi_product.length.positive?
+    promo = if multi_products.length.positive?
               prepare_json['OFFERS'][num]
             else
               prepare_json['PRODUCT']
@@ -64,8 +64,8 @@ class CustomParser_13829 < Scripting::CustomParser
   end
 
   def product_availability(num=nil)
-    stock = if multi_product.length.positive?
-              multi_product[num].xpath('./@data-availstatus').text
+    stock = if multi_products.length.positive?
+              multi_products[num].xpath('./@data-availstatus').text
             else
               stock = @doc.xpath('//div[contains(@class,"bx-catalog-element")]/@class').text
               len = stock.reverse.index('-')
@@ -81,7 +81,7 @@ class CustomParser_13829 < Scripting::CustomParser
 
   def name_multiproduct(num)
     name = @doc.xpath('//h1[@class="bx-title"]').text
-    weight = multi_product[num].xpath('./@title').text
+    weight = multi_products[num].xpath('./@title').text
     "#{name} #{weight}"
   end
 end
