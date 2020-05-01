@@ -38,6 +38,7 @@ def make_a_choice
            "  vars_init(ctx)\n"\
            "  Insert your command(s) or call method(s)\n"
       puts 'end'
+      puts 'Or use "all_choices"'
     else
       vars_init(find_ctx[choice - 1])
       puts 'Instance variable initialized'
