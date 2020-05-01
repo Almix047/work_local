@@ -1,5 +1,5 @@
 # Enter here the path to the name of the object that you want to see in the list
-INSTANCE_TITLE_XPATH = '//div[contains(@class, "item_name_container")]/h1'.freeze
+INSTANCE_TITLE_XPATH = '//div[contains(@class, "item_name_container")]/h1'.freeze # Garfield
 
 PRICE = :price
 REGULAR_PRICE = :regular_price
