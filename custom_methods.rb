@@ -9,10 +9,11 @@ def prepare_json
   end
 end
 
-def line_by_line(input)
-  input.each { |el| puts el } if input.is_a?(Array)
-  input.each { |key, val| puts "#{key}: #{val}" } if input.is_a?(Hash)
-end
+# !Better to use the native method "jj"
+# def line_by_line(input)
+#   input.each { |el| puts el } if input.is_a?(Array)
+#   JSON.pretty_generate(input) if input.is_a?(Hash)
+# end
 
 def all_choices
   find_ctx.each do |ctx|
