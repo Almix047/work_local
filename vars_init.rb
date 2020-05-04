@@ -23,6 +23,7 @@ end
 def vars_init(name)
   @ctx = Object.const_get(name).new
   @doc = @ctx.doc
+  remove_instance_variable(:@multi_products) if instance_variable_defined?('@multi_products')
 end
 
 def make_a_choice
@@ -41,7 +42,8 @@ def make_a_choice
       puts 'Or use "all_choices"'
     else
       vars_init(find_ctx[choice - 1])
-      puts 'Instance variable initialized'
+      # puts 'Instance variable initialized'
+      vt
     end
   else
     puts "!!!INVALID INPUT: (#{choice}). Only an integer from 1 to #{max_num}"
