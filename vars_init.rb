@@ -48,3 +48,9 @@ def make_a_choice
     puts '   Exit'
   end
 end
+
+def vt # status instance variables
+  puts "ctx: #{@ctx ? @ctx.title : false}"
+  puts "doc: #{instance_variable_defined?('@doc')}"
+  puts "m_p: #{instance_variable_defined?('@multi_products')}"
+end
