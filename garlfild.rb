@@ -3,19 +3,12 @@ class CustomParser_13829 < Scripting::CustomParser
   # end
 
   def parse(ctx)
-    # ctx.base_product возвращает результат работы экстрактора в виде хэша:
-    # {:brand=>"Canac", :name=>"K9 Flashing Dog Collar", :price=>4.66, ...}
-    # если экстрактор не отработал, вернется nil
-    # скрипт отрабатывает на всех скачиваемых страницах. Поэтому необходимо самостоятельно ограничить область его работы.
-    # в данном случае мы выполним код, если страница продуктовая (на ней отработал экстрактор)
-    # if ctx.base_product
-    if ctx.doc.xpath("//div[@itemtype='//schema.org/Product']")
-      initialize_instance_variables(ctx)
-      # делаем копию экстрактора. если работать с результатом напрямую, при каждой новой итерации исходник будет переписываться
-      p = ctx.base_product.dup
-      if multi_products.length.positive?
+    initialize_instance_variables(ctx)
+    if product_page?
+      if multi_products.any?
         (0..multi_products.length - 1).each do |num|
-          p[NAME] = name_multiproduct(num)
+          p = @ctx.base_product.dup
+          p[NAME] = prepare_json['OFFERS'][num]['NAME'].split.join(' ')
           p[SKU] = multi_products[num].xpath('./@data-art').text
           p[PRICE] = prepare_json['OFFERS'][num]['ITEM_PRICES'].first['PRICE']
           p[PROMO_NAME] = 'Акция' if promo?(num)
@@ -25,14 +18,14 @@ class CustomParser_13829 < Scripting::CustomParser
           ctx.add_product(p)
         end
       else
-        p[NAME] = @doc.xpath('//h1[@class="bx-title"]').text.tr(',', '')
+        p = @ctx.base_product.dup
+        p[NAME] = @doc.xpath('//h1[@class="bx-title"]').text
         p[SKU] = @doc.xpath('//span[@class="item_art_number"]').text
         p[PRICE] = prepare_json['PRODUCT']['ITEM_PRICES'].first['PRICE']
         p[PROMO_NAME] = 'Акция' if promo?
         p[REGULAR_PRICE] = prepare_json['PRODUCT']['ITEM_PRICES'].first['BASE_PRICE'] if promo?
         p[STOCK] = product_availability
-        # To fix
-        p[KEY] = @doc.xpath('//p[@class="field js_class_valid"]/input[@name="good_id"]/@value').text + p[SKU]
+        p[KEY] = @doc.xpath('//input[@name="good_id"]/@value').text + p[SKU]
         ctx.add_product(p)
       end
     end
@@ -44,8 +37,12 @@ class CustomParser_13829 < Scripting::CustomParser
     @doc = ctx.doc
   end
 
+  def product_page?
+    @ctx.doc.xpath("//div[@itemtype='//schema.org/Product']").any?
+  end
+
   def multi_products
-    @doc.xpath("//div[@class='product-item-detail-info-section']//li")
+    @multi_products ||= @doc.xpath("//div[@class='product-item-detail-info-section']//li")
   end
 
   def prepare_json
@@ -55,16 +52,12 @@ class CustomParser_13829 < Scripting::CustomParser
   end
 
   def promo?(num = nil)
-    promo = if multi_products.length.positive?
-              prepare_json['OFFERS'][num]
-            else
-              prepare_json['PRODUCT']
-            end
+    promo = multi_products.any? ? prepare_json['OFFERS'][num] : prepare_json['PRODUCT']
     promo['ITEM_PRICES'].first['DISCOUNT'].to_f.positive?
   end
 
   def product_availability(num = nil)
-    stock = if multi_products.length.positive?
+    stock = if multi_products.any?
               multi_products[num].xpath('./@data-availstatus').text
             else
               stock = @doc.xpath('//div[contains(@class,"bx-catalog-element")]/@class').text
@@ -79,9 +72,8 @@ class CustomParser_13829 < Scripting::CustomParser
     end
   end
 
-  def name_multiproduct(num)
-    name = prepare_json['OFFERS'][num]['NAME']
-    weight = multi_products[num].xpath('./@title').text
-    "#{name} #{weight}"
-  end
+  # def promo_conditions
+  #   if multi_products.length.positive?
+  #     multi_products[num].xpath('./@data-discountstatus')
+  # end
 end
