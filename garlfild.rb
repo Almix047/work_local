@@ -8,11 +8,11 @@ class CustomParser_13829 < Scripting::CustomParser
       if multi_products.any?
         (0..multi_products.length - 1).each do |num|
           p = @ctx.base_product.dup
-          p[NAME] = prepare_json['OFFERS'][num]['NAME'].split.join(' ')
+          p[NAME] = prepare_json.dig('OFFERS', num, 'NAME').split.join(' ')
           p[SKU] = multi_products[num].xpath('./@data-art').text
-          p[PRICE] = prepare_json['OFFERS'][num]['ITEM_PRICES'].first['PRICE'] if product_availability?(num)
+          p[PRICE] = prepare_json.dig('OFFERS', num, 'ITEM_PRICES', 0, 'PRICE') if product_availability?(num)
           p[PROMO_NAME] = 'Акция' if promo?(num)
-          p[REGULAR_PRICE] = prepare_json['OFFERS'][num]['ITEM_PRICES'].first['BASE_PRICE'] if promo?(num)
+          p[REGULAR_PRICE] = prepare_json.dig('OFFERS', num, 'ITEM_PRICES', 0, 'BASE_PRICE') if promo?(num)
           p[STOCK] = product_availability?(num)
           p[KEY] = multi_products[num].xpath('./@data-onevalue').text + p[SKU]
           ctx.add_product(p)
@@ -21,9 +21,9 @@ class CustomParser_13829 < Scripting::CustomParser
         p = @ctx.base_product.dup
         p[NAME] = @doc.xpath('//h1[@class="bx-title"]').text
         p[SKU] = @doc.xpath('//span[@class="item_art_number"]').text
-        p[PRICE] = prepare_json['PRODUCT']['ITEM_PRICES'].first['PRICE'] if product_availability?
+        p[PRICE] = prepare_json.dig('PRODUCT', 'ITEM_PRICES', 0, 'PRICE') if product_availability?
         p[PROMO_NAME] = 'Акция' if promo?
-        p[REGULAR_PRICE] = prepare_json['PRODUCT']['ITEM_PRICES'].first['BASE_PRICE'] if promo?
+        p[REGULAR_PRICE] = prepare_json.dig('PRODUCT', 'ITEM_PRICES', 0, 'BASE_PRICE') if promo?
         p[STOCK] = product_availability?
         p[KEY] = @doc.xpath('//input[@name="good_id"]/@value').text + p[SKU]
         ctx.add_product(p)
@@ -52,8 +52,8 @@ class CustomParser_13829 < Scripting::CustomParser
   end
 
   def promo?(num = nil)
-    promo = multi_products.any? ? prepare_json['OFFERS'][num] : prepare_json['PRODUCT']
-    promo['ITEM_PRICES'].first['DISCOUNT'].to_f.positive?
+    promo = multi_products.any? ? prepare_json.dig('OFFERS', num) : prepare_json['PRODUCT']
+    promo.dig('ITEM_PRICES', 0, 'DISCOUNT').to_f.positive?
   end
 
   def product_availability?(num = nil)
