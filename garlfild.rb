@@ -10,10 +10,10 @@ class CustomParser_13829 < Scripting::CustomParser
           p = @ctx.base_product.dup
           p[NAME] = prepare_json['OFFERS'][num]['NAME'].split.join(' ')
           p[SKU] = multi_products[num].xpath('./@data-art').text
-          p[PRICE] = prepare_json['OFFERS'][num]['ITEM_PRICES'].first['PRICE'] if product_availability?
+          p[PRICE] = prepare_json['OFFERS'][num]['ITEM_PRICES'].first['PRICE'] if product_availability?(num)
           p[PROMO_NAME] = 'Акция' if promo?(num)
           p[REGULAR_PRICE] = prepare_json['OFFERS'][num]['ITEM_PRICES'].first['BASE_PRICE'] if promo?(num)
-          p[STOCK] = product_availability(num)
+          p[STOCK] = product_availability?(num)
           p[KEY] = multi_products[num].xpath('./@data-onevalue').text + p[SKU]
           ctx.add_product(p)
         end
@@ -24,7 +24,7 @@ class CustomParser_13829 < Scripting::CustomParser
         p[PRICE] = prepare_json['PRODUCT']['ITEM_PRICES'].first['PRICE'] if product_availability?
         p[PROMO_NAME] = 'Акция' if promo?
         p[REGULAR_PRICE] = prepare_json['PRODUCT']['ITEM_PRICES'].first['BASE_PRICE'] if promo?
-        p[STOCK] = product_availability
+        p[STOCK] = product_availability?
         p[KEY] = @doc.xpath('//input[@name="good_id"]/@value').text + p[SKU]
         ctx.add_product(p)
       end
@@ -42,7 +42,7 @@ class CustomParser_13829 < Scripting::CustomParser
   end
 
   def multi_products
-    @multi_products ||= @doc.xpath("//div[@class='product-item-detail-info-section']//li")
+    @_multi_products ||= @doc.xpath("//div[@class='product-item-detail-info-section']//li")
   end
 
   def prepare_json
@@ -56,19 +56,19 @@ class CustomParser_13829 < Scripting::CustomParser
     promo['ITEM_PRICES'].first['DISCOUNT'].to_f.positive?
   end
 
-  def product_availability(num = nil)
+  def product_availability?(num = nil)
     stock = if multi_products.any?
-              multi_products[num].xpath('./@data-availstatus').text
-            else
-              stock = @doc.xpath('//div[contains(@class,"bx-catalog-element")]/@class').text
-              len = stock.reverse.index('-')
-              start = stock.length - len
-              stock[start..-1].strip
-            end
-    if stock =~ /not?_avail/
-      'Out of stock'
+      multi_products[num].xpath('./@data-availstatus').text
     else
-      'In stock'
+      stock = @doc.xpath('//div[contains(@class,"bx-catalog-element")]/@class').text
+      len = stock.reverse.index('-')
+      start = stock.length - len
+      stock[start..-1].strip
+    end
+    if stock =~ /not?_avail/
+      false
+    else
+      true
     end
   end
 
