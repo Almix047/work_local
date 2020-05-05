@@ -22,6 +22,30 @@ end
 def parse
   puts "Product page: #{product_page?}"
   if multi_products.any?
+    create_multi_product
+  else
+    create_single_product
+  end
+end
+
+# ----
+# ----
+
+  def create_single_product
+    p = @ctx.base_product.dup
+    puts '---------------------------------------------------------------------'
+    puts p[NAME] = @doc.xpath('//h1[@class="bx-title"]').text
+    puts p[SKU] = @doc.xpath('//span[@class="item_art_number"]').text
+    puts p[PRICE] = prepare_json.dig('PRODUCT', 'ITEM_PRICES', 0, 'PRICE') if product_availability?
+    puts p[PROMO_NAME] = 'Акция' if promo?
+    puts p[REGULAR_PRICE] = prepare_json.dig('PRODUCT', 'ITEM_PRICES', 0, 'BASE_PRICE') if promo?
+    puts p[STOCK] = product_availability?
+    puts p[KEY] = @doc.xpath('//input[@name="good_id"]/@value').text + p[SKU]
+    puts "!!!AVAIL_TEST_VALUE IS PASS: #{avail_test_value?}"
+    puts "!!!KEY_TEST_VALUE IS PASS: #{key_test_value?}"
+  end
+
+  def create_multi_product
     (0..multi_products.length - 1).each do |num|
       p = @ctx.base_product.dup
       puts '---------------------------------------------------------------------'
@@ -35,23 +59,7 @@ def parse
       puts "!!!AVAIL_TEST_VALUE IS PASS: #{avail_test_value?(num)}"
       p.clear
     end
-  else
-    p = @ctx.base_product.dup
-    puts '---------------------------------------------------------------------'
-    puts p[NAME] = @doc.xpath('//h1[@class="bx-title"]').text
-    puts p[SKU] = @doc.xpath('//span[@class="item_art_number"]').text
-    puts p[PRICE] = prepare_json.dig('PRODUCT', 'ITEM_PRICES', 0, 'PRICE') if product_availability?
-    puts p[PROMO_NAME] = 'Акция' if promo?
-    puts p[REGULAR_PRICE] = prepare_json.dig('PRODUCT', 'ITEM_PRICES', 0, 'BASE_PRICE') if promo?
-    puts p[STOCK] = product_availability?
-    puts p[KEY] = @doc.xpath('//input[@name="good_id"]/@value').text + p[SKU]
-    puts "!!!AVAIL_TEST_VALUE IS PASS: #{avail_test_value?}"
-    puts "!!!KEY_TEST_VALUE IS PASS: #{key_test_value?}"
   end
-end
-
-# ----
-# ----
 
   def product_page?
     @ctx.doc.xpath("//div[@itemtype='//schema.org/Product']").any?
