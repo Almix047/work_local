@@ -10,7 +10,7 @@ class CustomParser_13829 < Scripting::CustomParser
           p = @ctx.base_product.dup
           p[NAME] = prepare_json['OFFERS'][num]['NAME'].split.join(' ')
           p[SKU] = multi_products[num].xpath('./@data-art').text
-          p[PRICE] = prepare_json['OFFERS'][num]['ITEM_PRICES'].first['PRICE']
+          p[PRICE] = prepare_json['OFFERS'][num]['ITEM_PRICES'].first['PRICE'] if product_availability?
           p[PROMO_NAME] = 'Акция' if promo?(num)
           p[REGULAR_PRICE] = prepare_json['OFFERS'][num]['ITEM_PRICES'].first['BASE_PRICE'] if promo?(num)
           p[STOCK] = product_availability(num)
@@ -21,7 +21,7 @@ class CustomParser_13829 < Scripting::CustomParser
         p = @ctx.base_product.dup
         p[NAME] = @doc.xpath('//h1[@class="bx-title"]').text
         p[SKU] = @doc.xpath('//span[@class="item_art_number"]').text
-        p[PRICE] = prepare_json['PRODUCT']['ITEM_PRICES'].first['PRICE']
+        p[PRICE] = prepare_json['PRODUCT']['ITEM_PRICES'].first['PRICE'] if product_availability?
         p[PROMO_NAME] = 'Акция' if promo?
         p[REGULAR_PRICE] = prepare_json['PRODUCT']['ITEM_PRICES'].first['BASE_PRICE'] if promo?
         p[STOCK] = product_availability
