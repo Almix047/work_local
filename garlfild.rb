@@ -57,19 +57,8 @@ class CustomParser_13829 < Scripting::CustomParser
   end
 
   def product_availability?(num = nil)
-    stock = if multi_products.any?
-      multi_products[num].xpath('./@data-availstatus').text
-    else
-      stock = @doc.xpath('//div[contains(@class,"bx-catalog-element")]/@class').text
-      len = stock.reverse.index('-')
-      start = stock.length - len
-      stock[start..-1].strip
-    end
-    if stock =~ /not?_avail/
-      false
-    else
-      true
-    end
+    stock = multi_products.any? ? multi_products[num].xpath('./@data-availstatus').text : @doc.xpath('//@data-availstatus').text
+    stock !~ /not?_avail/
   end
 
   # def promo_conditions
