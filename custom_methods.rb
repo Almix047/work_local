@@ -50,14 +50,15 @@ end
       p = @ctx.base_product.dup
       puts '---------------------------------------------------------------------'
       puts p[NAME] = prepare_json.dig('OFFERS', num, 'NAME').split.join(' ')
-      puts p[SKU] = multi_products[num].xpath('./@data-art').text
-      puts p[PRICE] = prepare_json.dig('OFFERS', num, 'ITEM_PRICES', 0, 'PRICE') if product_availability?(num)
-      puts p[PROMO_NAME] = 'Акция' if promo?(num)
-      puts p[REGULAR_PRICE] = prepare_json.dig('OFFERS', num, 'ITEM_PRICES', 0, 'BASE_PRICE') if promo?(num) && product_availability?(num)
-      puts p[STOCK] = product_availability?(num)
-      puts p[KEY] = multi_products[num].xpath('./@data-onevalue').text + p[SKU]
+      index = find_index_product(p[NAME])
+      puts p[SKU] = multi_products[index].xpath('./@data-art').text
+      puts p[PRICE] = prepare_json.dig('OFFERS', num, 'ITEM_PRICES', 0, 'PRICE') if product_availability?(index)
+      puts p[PROMO_NAME] = 'Акция' if promo?(index)
+      puts p[REGULAR_PRICE] = prepare_json.dig('OFFERS', num, 'ITEM_PRICES', 0, 'BASE_PRICE') if promo?(index) && product_availability?(index)
+      puts p[STOCK] = product_availability?(index)
+      puts p[KEY] = multi_products[index].xpath('./@data-onevalue').text + p[SKU]
 
-      puts "#{p[PRICE].to_f < p[REGULAR_PRICE].to_f ? '!!!GOOOD price!!!' : '!!!BAD price!!!'}" if promo?(num)
+      puts "#{p[PRICE].to_f < p[REGULAR_PRICE].to_f ? '!!!GOOOD price!!!' : '!!!BAD price!!!'}" if promo?(index)
       puts "!!!WARNING!!! PRICE = #{p[PRICE]}" if p[PRICE].to_f.zero?
       p.clear
     end
@@ -71,13 +72,22 @@ end
     @multi_products ||= @doc.xpath("//div[@class='product-item-detail-info-section']//li")
   end
 
-  def promo?(num = nil)
-    multi_products.any? ? multi_products[num].xpath('./@data-discountstatus').text.include?('discount') : @doc.xpath('//div[@class="item_discount"]').any?
+  def promo?(index = nil)
+    multi_products.any? ? multi_products[index].xpath('./@data-discountstatus').text.include?('discount') : @doc.xpath('//div[@class="item_discount"]').any?
   end
 
-  def product_availability?(num = nil)
-    stock = multi_products.any? ? multi_products[num].xpath('./@data-availstatus').text : @doc.xpath('//@data-availstatus').text
+  def product_availability?(index = nil)
+    stock = multi_products.any? ? multi_products[index].xpath('./@data-availstatus').text : @doc.xpath('//@data-availstatus').text
     stock !~ /not?_avail/
+  end
+
+  def find_index_product(name)
+    weigths = multi_products.xpath('./@title').map(&:text)
+    result = weigths.each_index.select  do |index|
+      str_start = name.rindex(weigths[index])
+      name.include?(weigths[index]) && name[str_start..-1] == weigths[index]
+    end
+    result.join.to_i
   end
 
 # -----
