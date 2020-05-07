@@ -8,6 +8,7 @@ NAME = :name
 STOCK = :stock
 PROMO_NAME = :promo_name
 SKU = :sku
+IMAGE = :image
 
 class CtxConfig
   attr_reader :title
