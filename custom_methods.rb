@@ -36,7 +36,7 @@ end
     puts p[SKU] = @doc.xpath('//span[@class="item_art_number"]').text
     puts p[PRICE] = prepare_json.dig('PRODUCT', 'ITEM_PRICES', 0, 'PRICE') if product_availability?
     puts p[PROMO_NAME] = 'Акция' if promo?
-    puts p[REGULAR_PRICE] = prepare_json.dig('PRODUCT', 'ITEM_PRICES', 0, 'BASE_PRICE') if promo? && product_availability?
+    puts p[REGULAR_PRICE] = regular_price if promo? && product_availability?
     puts p[STOCK] = product_availability?
     puts p[KEY] = @doc.xpath('//input[@name="good_id"]/@value').text + p[SKU]
 
@@ -54,7 +54,7 @@ end
       puts p[SKU] = multi_products[index].xpath('./@data-art').text
       puts p[PRICE] = prepare_json.dig('OFFERS', num, 'ITEM_PRICES', 0, 'PRICE') if product_availability?(index)
       puts p[PROMO_NAME] = 'Акция' if promo?(index)
-      puts p[REGULAR_PRICE] = prepare_json.dig('OFFERS', num, 'ITEM_PRICES', 0, 'BASE_PRICE') if promo?(index) && product_availability?(index)
+      puts p[REGULAR_PRICE] = regular_price(num) if promo?(index) && product_availability?(index)
       puts p[STOCK] = product_availability?(index)
       puts p[KEY] = multi_products[index].xpath('./@data-onevalue').text + p[SKU]
 
@@ -88,6 +88,25 @@ end
       name.include?(weigths[index]) && name[str_start..-1] == weigths[index]
     end
     result.join.to_i
+  end
+
+  def regular_price(num = nil)
+    if multi_products.any?
+      source = prepare_json.dig('OFFERS', num, 'ITEM_PRICES', 0,)
+      regular_price = source['BASE_PRICE']
+      price = source['PRICE']
+       if regular_price == price
+         prepare_json['OFFERS'].map { |offer| offer["ITEM_PRICES"].first["BASE_PRICE"] }.max
+       else
+         regular_price
+       end
+    else
+      prepare_json.dig('PRODUCT', 'ITEM_PRICES', 0, 'BASE_PRICE')
+    end
+  end
+
+  def all_prices
+    prepare_json['OFFERS'].map { |offer| offer["ITEM_PRICES"].first["BASE_PRICE"] }
   end
 
 # -----
