@@ -53,7 +53,7 @@ end
       puts p[SKU] = multi_products[num].xpath('./@data-art').text
       puts p[PRICE] = prepare_json.dig('OFFERS', num, 'ITEM_PRICES', 0, 'PRICE') if product_availability?(num)
       puts p[PROMO_NAME] = 'Акция' if promo?(num)
-      puts p[REGULAR_PRICE] = prepare_json.dig('OFFERS', num, 'ITEM_PRICES', 0, 'BASE_PRICE') if promo?(num)
+      puts p[REGULAR_PRICE] = prepare_json.dig('OFFERS', num, 'ITEM_PRICES', 0, 'BASE_PRICE') if promo?(num) && product_availability?(num)
       puts p[STOCK] = product_availability?(num)
       puts p[KEY] = multi_products[num].xpath('./@data-onevalue').text + p[SKU]
 
