@@ -46,19 +46,19 @@ end
   end
 
   def create_multi_product
-    (0..multi_products.length - 1).each do |num|
+    multi_products.each do |product|
       p = @ctx.base_product.dup
       puts '---------------------------------------------------------------------'
-      puts p[NAME] = prepare_json.dig('OFFERS', num, 'NAME').split.join(' ')
-      index = find_index_product(p[NAME])
-      puts p[SKU] = multi_products[index].xpath('./@data-art').text
-      puts p[PRICE] = prepare_json.dig('OFFERS', num, 'ITEM_PRICES', 0, 'PRICE') if product_availability?(index)
-      puts p[PROMO_NAME] = 'Акция' if promo?(index)
-      puts p[REGULAR_PRICE] = regular_price(num) if promo?(index) && product_availability?(index)
-      puts p[STOCK] = product_availability?(index)
-      puts p[KEY] = multi_products[index].xpath('./@data-onevalue').text + p[SKU]
+      index = find_index_product(product.xpath('./@data-onevalue').text)
+      puts p[NAME] = prepare_json.dig('OFFERS', index, 'NAME').split.join(' ')
+      puts p[SKU] = product.xpath('./@data-art').text
+      puts p[PRICE] = prepare_json.dig('OFFERS', index, 'ITEM_PRICES', 0, 'PRICE') if product_availability?(product)
+      puts p[PROMO_NAME] = 'Акция' if promo?(product)
+      puts p[REGULAR_PRICE] = regular_price(product) if promo?(product) && product_availability?(product)
+      puts p[STOCK] = product_availability?(product)
+      puts p[KEY] = product.xpath('./@data-onevalue').text + p[SKU]
 
-      puts "#{p[PRICE].to_f < p[REGULAR_PRICE].to_f ? '!!!GOOOD price!!!' : '!!!BAD price!!!'}" if promo?(index)
+      puts "#{p[PRICE].to_f < p[REGULAR_PRICE].to_f ? '!!!GOOOD price!!!' : '!!!BAD price!!!'}" if promo?(product)
       puts "!!!WARNING!!! PRICE = #{p[PRICE]}" if p[PRICE].to_f.zero?
       p.clear
     end
@@ -72,27 +72,24 @@ end
     @multi_products ||= @doc.xpath("//div[@class='product-item-detail-info-section']//li")
   end
 
-  def promo?(index = nil)
-    multi_products.any? ? multi_products[index].xpath('./@data-discountstatus').text.include?('discount') : @doc.xpath('//div[@class="item_discount"]').any?
+  def promo?(product = nil)
+    multi_products.any? ? product.xpath('./@data-discountstatus').text.include?('discount') : @doc.xpath('//div[@class="item_discount"]').any?
   end
 
-  def product_availability?(index = nil)
-    stock = multi_products.any? ? multi_products[index].xpath('./@data-availstatus').text : @doc.xpath('//@data-availstatus').text
+  def product_availability?(product = nil)
+    stock = multi_products.any? ? product.xpath('./@data-availstatus').text : @doc.xpath('//@data-availstatus').text
     stock !~ /not?_avail/
   end
 
-  def find_index_product(name)
-    weigths = multi_products.xpath('./@title').map(&:text)
-    result = weigths.each_index.select  do |index|
-      str_start = name.rindex(weigths[index])
-      name.include?(weigths[index]) && name[str_start..-1] == weigths[index]
-    end
-    result.join.to_i
+  def find_index_product(pid)
+    pids = prepare_json['TREE_PROPS'].first['VALUES'].map { |key, val| key}
+    pids.delete('0') # Optional string
+    pids.index(pid)
   end
 
-  def regular_price(num = nil)
+  def regular_price(index = nil)
     if multi_products.any?
-      source = prepare_json.dig('OFFERS', num, 'ITEM_PRICES', 0,)
+      source = prepare_json.dig('OFFERS', index, 'ITEM_PRICES', 0,)
       regular_price = source['BASE_PRICE']
       price = source['PRICE']
        if regular_price == price
@@ -103,10 +100,6 @@ end
     else
       prepare_json.dig('PRODUCT', 'ITEM_PRICES', 0, 'BASE_PRICE')
     end
-  end
-
-  def all_prices
-    prepare_json['OFFERS'].map { |offer| offer["ITEM_PRICES"].first["BASE_PRICE"] }
   end
 
 # -----
