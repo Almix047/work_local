@@ -54,7 +54,8 @@ end
       puts p[SKU] = product.xpath('./@data-art').text
       puts p[PRICE] = prepare_json.dig('OFFERS', index, 'ITEM_PRICES', 0, 'PRICE') if product_availability?(product)
       puts p[PROMO_NAME] = 'Акция' if promo?(product)
-      puts p[REGULAR_PRICE] = regular_price(product) if promo?(product) && product_availability?(product)
+           result = regular_price(index) if promo?(product) && product_availability?(product)
+      puts p[REGULAR_PRICE] = result == p[PRICE] ? product.xpath('./@data-old-price').text.tr(',', '.').to_f : result if promo?(product) && product_availability?(product)
       puts p[STOCK] = product_availability?(product)
       puts p[KEY] = product.xpath('./@data-onevalue').text + p[SKU]
 
@@ -82,14 +83,14 @@ end
   end
 
   def find_index_product(pid)
-    pids = prepare_json['TREE_PROPS'].first['VALUES'].map { |key, val| key}
+    pids = prepare_json['TREE_PROPS'].first['VALUES'].map { |key, _val| key }
     pids.delete('0') # Optional string
     pids.index(pid)
   end
 
   def regular_price(index = nil)
     if multi_products.any?
-      source = prepare_json.dig('OFFERS', index, 'ITEM_PRICES', 0,)
+      source = prepare_json.dig('OFFERS', index, 'ITEM_PRICES', 0)
       regular_price = source['BASE_PRICE']
       price = source['PRICE']
        if regular_price == price
