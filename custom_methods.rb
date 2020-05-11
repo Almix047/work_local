@@ -79,7 +79,8 @@ end
   end
 
   def product_availability?(product = nil)
-    stock = multi_products.any? ? product.xpath('./@data-availstatus').text : @doc.xpath('//@data-availstatus').text
+    single_product_availability_xpath = '//div[contains(@class, "bx-catalog-element")]/@data-good_avail_status'
+    stock = multi_products.any? ? product.xpath('./@data-availstatus').text : @doc.xpath(single_product_availability_xpath).text
     stock !~ /not?_avail/
   end
 
