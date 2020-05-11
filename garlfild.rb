@@ -69,7 +69,8 @@ class EducationGarfiled < Scripting::CustomParser
   end
 
   def product_availability?(product = nil)
-    stock = multi_products.any? ? @ctx.word2(product, './@data-availstatus') : @ctx.word2(@doc, '//@data-availstatus')
+    single_product_availability_xpath = '//div[contains(@class, "bx-catalog-element")]/@data-good_avail_status'
+    stock = multi_products.any? ? @ctx.word2(product, './@data-availstatus') : @ctx.word2(@doc, single_product_availability_xpath)
     stock !~ /not?_avail/
   end
 
