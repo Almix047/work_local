@@ -33,27 +33,27 @@ class EducationGarfiled < Scripting::CustomParser
 
   def create_single_product
     p = @ctx.base_product.dup
-    p[NAME] = @doc.xpath('//h1[@class="bx-title"]').text
-    p[SKU] = @doc.xpath('//span[@class="item_art_number"]').text
+    p[NAME] = @ctx.word2(@doc, '//h1[@class="bx-title"]')
+    p[SKU] = @ctx.word2(@doc, '//span[@class="item_art_number"]')
     p[PRICE] = prepare_json.dig('PRODUCT', 'ITEM_PRICES', 0, 'PRICE') if product_availability?
     p[PROMO_NAME] = 'Акция' if promo?
     p[REGULAR_PRICE] = regular_price if promo? && product_availability?
     p[STOCK] = product_availability?
-    p[KEY] = @doc.xpath('//input[@name="good_id"]/@value').text + p[SKU]
+    p[KEY] = @ctx.word2(@doc, '//input[@name="good_id"]/@value') + p[SKU]
     @ctx.add_product(p)
   end
 
   def create_multi_product
     multi_products.each do |product|
       p = @ctx.base_product.dup
-      index = find_index_product(product.xpath('./@data-onevalue').text)
+      index = find_index_product(@ctx.word2(product, './@data-onevalue'))
       p[NAME] = prepare_json.dig('OFFERS', index, 'NAME').split.join(' ')
-      p[SKU] = product.xpath('./@data-art').text
+      p[SKU] = @ctx.word2(product, './@data-art')
       p[PRICE] = prepare_json.dig('OFFERS', index, 'ITEM_PRICES', 0, 'PRICE') if product_availability?(product)
       p[PROMO_NAME] = 'Акция' if promo?(product)
       p[REGULAR_PRICE] = regular_price(index, product) if promo?(product) && product_availability?(product)
       p[STOCK] = product_availability?(product)
-      p[KEY] = product.xpath('./@data-onevalue').text + p[SKU]
+      p[KEY] = @ctx.word2(product, './@data-onevalue') + p[SKU]
       @ctx.add_product(p)
     end
   end
@@ -69,7 +69,7 @@ class EducationGarfiled < Scripting::CustomParser
   end
 
   def product_availability?(product = nil)
-    stock = multi_products.any? ? product.xpath('./@data-availstatus').text : @doc.xpath('//@data-availstatus').text
+    stock = multi_products.any? ? @ctx.word2(product, './@data-availstatus') : @ctx.word2(@doc, '//@data-availstatus')
     stock !~ /not?_avail/
   end
 
