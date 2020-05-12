@@ -34,7 +34,8 @@ class EducationGarfiled < Scripting::CustomParser
   def create_single_product
     p = @ctx.base_product.dup
     p[NAME] = @ctx.word2(@doc, '//h1[@class="bx-title"]')
-    p[SKU] = @ctx.word2(@doc, '//span[@class="item_art_number"]')
+    sku = @ctx.word2(@doc, '//span[@class="item_art_number"]')
+    p[SKU] = sku[0...40] if sku.present?
     p[PRICE] = prepare_json.dig('PRODUCT', 'ITEM_PRICES', 0, 'PRICE') if product_availability?
     p[PROMO_NAME] = 'Акция' if promo?
     p[REGULAR_PRICE] = regular_price if promo? && product_availability?
@@ -96,7 +97,11 @@ class EducationGarfiled < Scripting::CustomParser
   end
 
   def regular_price(index = nil, product = nil)
-    price = multi_products.any? ? product.xpath('./@data-old-price').text.tr(',', '.').to_f : prepare_json.dig('PRODUCT', 'ITEM_PRICES', 0, 'BASE_PRICE').to_f
+    price = if multi_products.any?
+      product.xpath('./@data-old-price').text.tr(',', '.').to_f
+    else
+      prepare_json.dig('PRODUCT', 'ITEM_PRICES', 0, 'BASE_PRICE').to_f
+    end
     price.positive? ? price : base_price(index)
   end
 end
