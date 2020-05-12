@@ -1,13 +1,9 @@
 class EducationGarfiled < Scripting::CustomParser
   def handle404(ctx)
     doc = RuleTools.doc(ctx.page_content)
-    if doc.xpath('//div[@class="title_404"]/p').text.include?('Страница не найдена')
-      p = {}
-      p[:url] = ctx.todo[:url]
-      p[DELISTED] = true
-      ctx.products << p
-      true
-    end
+    unavalibale = ctx.word2(doc, '//div[@class="title_404"]', '(Страница не найдена)')
+    ctx.add_product(url: ctx.todo[:url], delisted: true) if unavalibale
+    ctx.products.any?
     false
   end
 
@@ -66,7 +62,7 @@ class EducationGarfiled < Scripting::CustomParser
   end
 
   def promo?(product = nil)
-    multi_products.any? ? product.xpath('./@data-discountstatus').text.include?('discount') : @doc.xpath('//div[@class="item_discount"]').any?
+    multi_products.any? ? @ctx.word2(product, './@data-discountstatus', '(discount)').present? : @doc.xpath('//div[@class="item_discount"]').any?
   end
 
   def product_availability?(product = nil)
@@ -98,7 +94,7 @@ class EducationGarfiled < Scripting::CustomParser
 
   def regular_price(index = nil, product = nil)
     price = if multi_products.any?
-      product.xpath('./@data-old-price').text.tr(',', '.').to_f
+      @ctx.word2(product, './@data-old-price').to_s.tr(',', '.').to_f
     else
       prepare_json.dig('PRODUCT', 'ITEM_PRICES', 0, 'BASE_PRICE').to_f
     end
