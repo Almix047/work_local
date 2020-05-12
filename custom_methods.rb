@@ -85,7 +85,7 @@ end
   end
 
   def find_index_product(pid)
-    pids = prepare_json['TREE_PROPS'].first['VALUES'].map { |key, _val| key }
+    pids = prepare_json['OFFERS'].map { |key, _val| key['TREE'][key['TREE'].keys[0]] }
     pids.delete('0') # Optional string
     pids.index(pid)
   end
