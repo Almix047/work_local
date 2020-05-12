@@ -95,27 +95,23 @@ end
       source = prepare_json.dig('OFFERS', index, 'ITEM_PRICES', 0)
       regular_price = source['BASE_PRICE']
       price = source['PRICE']
-       if regular_price == price
-         prepare_json['OFFERS'].map { |offer| offer["ITEM_PRICES"].first["BASE_PRICE"] }.max
-       else
-         regular_price
-       end
+      if regular_price == price
+        prepare_json['OFFERS'].map { |offer| offer['ITEM_PRICES'].first['BASE_PRICE'] }.max
+      else
+        regular_price
+      end
     else
       prepare_json.dig('PRODUCT', 'ITEM_PRICES', 0, 'BASE_PRICE')
     end
   end
 
-  def old_price(product)
-    product.xpath('./@data-old-price').text.tr(',', '.').to_f
-
-  # prices = multi_products.xpath('./@data-old-price').reject { |product| product.text.strip.empty? }
-  # prices.map(&:value).max.tr(',', '.').to_f if prices.any?
-  end
-
   def regular_price(index = nil, product = nil)
-    base = base_price(index)
-    old = multi_products.any? ? old_price(product) : prepare_json.dig('PRODUCT', 'ITEM_PRICES', 0, 'BASE_PRICE').to_f
-    old.positive? ? old : base
+    price = if multi_products.any?
+      product.xpath('./@data-old-price').text.tr(',', '.').to_f
+      else
+        prepare_json.dig('PRODUCT', 'ITEM_PRICES', 0, 'BASE_PRICE').to_f
+      end
+    price.positive? ? price : base_price(index)
   end
 
 # -----
