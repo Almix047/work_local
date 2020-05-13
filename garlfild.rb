@@ -37,6 +37,7 @@ class EducationGarfiled < Scripting::CustomParser
     p[REGULAR_PRICE] = regular_price if promo? && product_availability?
     p[STOCK] = product_availability?
     p[KEY] = @ctx.word2(@doc, '//input[@name="good_id"]/@value') + p[SKU].to_s
+    p[IMAGE] = @doc.xpath('//div[contains(@class,"product-item-detail-slider-image")]//@src').map(&:value)
     @ctx.add_product(p)
   end
 
@@ -51,6 +52,7 @@ class EducationGarfiled < Scripting::CustomParser
       p[REGULAR_PRICE] = regular_price(index, product) if promo?(product) && product_availability?(product)
       p[STOCK] = product_availability?(product)
       p[KEY] = @ctx.word2(product, './@data-onevalue') + p[SKU].to_s
+      p[IMAGE] = @doc.xpath('//div[contains(@class,"product-item-detail-slider-image")]//@src').map(&:value)
       @ctx.add_product(p)
     end
   end
